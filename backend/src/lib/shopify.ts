@@ -2,7 +2,7 @@ const SHOPIFY_STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN ?? "";
 const SHOPIFY_STOREFRONT_ACCESS_TOKEN =
   process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN ?? "";
 
-const STOREFRONT_API_URL = `https://${SHOPIFY_STORE_DOMAIN}/api/2024-04/graphql.json`;
+const STOREFRONT_API_URL = `https://${SHOPIFY_STORE_DOMAIN}/api/2026-04/graphql.json`;
 
 type CartCreateResponse = {
   cartCreate: {
@@ -23,15 +23,16 @@ export async function shopifyFetch<T>(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_ACCESS_TOKEN,
+      ...(SHOPIFY_STOREFRONT_ACCESS_TOKEN && {
+        "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_ACCESS_TOKEN,
+      }),
     },
     body: JSON.stringify({ query, variables }),
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Shopify API error: ${response.status} ${response.statusText}`,
-    );
+    const body = await response.text();
+    throw new Error(`Shopify API error: ${response.status} ${response.statusText} — ${body}`);
   }
 
   return response.json() as Promise<ShopifyGraphQLResponse<T>>;
