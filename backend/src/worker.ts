@@ -21,10 +21,17 @@ async function processBatch() {
     for (const userId of userIds) {
       try {
         const checkoutUrl = await createCheckoutForUser(VARIANT_ID);
-        await redis.setex(`${CHECKOUT_URL_PREFIX}${userId}`, 900, checkoutUrl); // Expira em 15 minutos (900 segundos)
-        console.log(
-          `[Worker] Gerado checkout para userId ${userId}: ${checkoutUrl}`,
-        );
+
+        if (checkoutUrl) {
+          await redis.setex(
+            `${CHECKOUT_URL_PREFIX}${userId}`,
+            900,
+            checkoutUrl,
+          ); // Expira em 15 minutos (900 segundos)
+          console.log(
+            `[Worker] Gerado checkout para userId ${userId}: ${checkoutUrl}`,
+          );
+        }
       } catch (err) {
         console.error(
           `[Worker] Erro ao gerar checkout para userId ${userId}:`,
