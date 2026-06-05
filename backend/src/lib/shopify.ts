@@ -41,6 +41,14 @@ export async function shopifyFetch<T>(
 export async function createCheckoutForUser(
   variantId: string,
 ): Promise<string | null> {
+  const FRONTEND_URL = process.env.FRONTEND_URL ?? "http://localhost:3000";
+  const orderId = crypto.randomUUID();
+  return `${FRONTEND_URL}/checkout?orderId=${orderId}&variantId=${encodeURIComponent(variantId)}`;
+}
+
+export async function createCheckoutForUserReal(
+  variantId: string,
+): Promise<string | null> {
   const query = `
   mutation cartCreate($variantId: ID!) {
     cartCreate(input: {
