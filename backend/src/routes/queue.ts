@@ -27,17 +27,23 @@ queue.post("/join", async (c) => {
 queue.get("/status/:userId", async (c) => {
   const { userId } = c.req.param();
 
-  // TODO: Implementar lógica de verificação de status na fila
-  // 1. Verificar se já existe uma checkoutUrl pronta: redis.get(`${CHECKOUT_URL_PREFIX}${userId}`)
-  //    - Se existir: retornar { status: "ready", checkoutUrl, position: null }
-  // 2. Caso contrário, verificar posição na fila: redis.zrank(QUEUE_KEY, userId)
-  //    - Se rank === null: retornar { status: "not_found" }
-  //    - Se rank >= 0: retornar { status: "queued", position: rank + 1, checkoutUrl: null }
+  const checkoutUrl = await redis.get(`${CHECKOUT_URL_PREFIX}${userId}`);
+  if (checkoutUrl) {
+    return c.json({ userId, status: "ready", position: null, checkoutUrl });
+  }
+
+  const rank = await redis.zrank(QUEUE_KEY, userId);
+  if (rank === null) {
+    return c.json(
+      { userId, status: "not_found", position: null, checkoutUrl: null },
+      404,
+    );
+  }
 
   return c.json({
     userId,
-    status: "not_found",
-    position: null,
+    status: "queued",
+    position: rank + 1,
     checkoutUrl: null,
   });
 });
