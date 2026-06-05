@@ -24,17 +24,27 @@ export function useQueue() {
 
   const startPolling = useCallback(
     (userId: string) => {
-      // TODO: Implementar lógica de polling real
-      // A cada POLLING_INTERVAL_MS, chamar getQueueStatus(userId) e:
-      //   - Se status === "queued": atualizar position com response.position
-      //   - Se status === "ready": parar o polling, chamar stopPolling(),
-      //     setar status para "ready" e redirecionar para response.checkoutUrl
-      //   - Se status === "not_found": tratar erro (usuário expirou da fila?)
-      pollingRef.current = setInterval(() => {
-        console.log("TODO: poll status for", userId);
+      pollingRef.current = setInterval(async () => {
+        const res = await getQueueStatus(userId);
+
+        switch (res.status) {
+          case "queued":
+            setStatus("queued");
+            setPosition(res.position);
+            break;
+          case "ready":
+            stopPolling();
+            setStatus("ready");
+            window.location.href = res.checkoutUrl ?? "#";
+            break;
+          case "not_found":
+            stopPolling();
+            setStatus("idle");
+            break;
+        }
       }, POLLING_INTERVAL_MS);
     },
-    [stopPolling]
+    [stopPolling],
   );
 
   const joinQueue_ = useCallback(async () => {
