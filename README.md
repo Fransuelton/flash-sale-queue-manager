@@ -65,14 +65,33 @@ flash-sale-queue-manager/
 
 ## Getting Started
 
-### Prerequisites
+### Option 1 — Docker (recommended)
 
-- [Bun](https://bun.sh)
-- [Node.js](https://nodejs.org) 20+
-- [Redis](https://redis.io) (or [Redis Stack](https://redis.io/docs/stack/) for RedisInsight UI)
-- A Shopify store with Storefront API access
+The easiest way to run everything with a single command.
 
-### Setup
+**Prerequisites:** [Docker](https://www.docker.com) and [Docker Compose](https://docs.docker.com/compose/)
+
+```bash
+git clone https://github.com/Fransuelton/flash-sale-queue-manager.git
+cd flash-sale-queue-manager
+
+cp backend/.env.example backend/.env
+# Fill in your Shopify credentials in backend/.env
+
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| Backend | http://localhost:3001 |
+| RedisInsight | http://localhost:8001 |
+
+---
+
+### Option 2 — Manual Setup
+
+**Prerequisites:** [Bun](https://bun.sh), [Node.js](https://nodejs.org) 20+, [Redis Stack](https://redis.io/docs/stack/)
 
 **1. Clone the repository**
 ```bash
