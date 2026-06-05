@@ -9,14 +9,29 @@ const VARIANT_ID = process.env.SHOPIFY_PRODUCT_VARIANT_ID ?? "";
 
 async function processBatch() {
   try {
-    // TODO: Implementar lógica de desenfileiramento e criação de checkout
-    // 1. Usar redis.zpopmin(QUEUE_KEY, BATCH_SIZE) para retirar os N primeiros usuários da fila
-    // 2. Para cada userId retornado:
-    //    a. Chamar createCheckoutForUser(VARIANT_ID) para gerar a checkoutUrl na Shopify
-    //    b. Salvar a URL no Redis: redis.setex(`${CHECKOUT_URL_PREFIX}${userId}`, 900, checkoutUrl)
-    //       (TTL de 15 min para o usuário completar o checkout)
-    //    c. Tratar erros individuais sem interromper o batch inteiro
-    console.log(`[Worker] TODO: processar batch de ${BATCH_SIZE} da fila "${QUEUE_KEY}"`);
+    const result = await redis.zpopmin(QUEUE_KEY, BATCH_SIZE);
+
+    const userIds = result.filter((_, i) => i % 2 === 0); // Extrai apenas os userIds (pares)
+
+    if (userIds.length === 0) {
+      console.log("[Worker] Nenhum usuário na fila para processar");
+      return;
+    }
+
+    for (const userId of userIds) {
+      try {
+        const checkoutUrl = await createCheckoutForUser(VARIANT_ID);
+        await redis.setex(`${CHECKOUT_URL_PREFIX}${userId}`, 900, checkoutUrl); // Expira em 15 minutos (900 segundos)
+        console.log(
+          `[Worker] Gerado checkout para userId ${userId}: ${checkoutUrl}`,
+        );
+      } catch (err) {
+        console.error(
+          `[Worker] Erro ao gerar checkout para userId ${userId}:`,
+          err,
+        );
+      }
+    }
   } catch (err) {
     console.error("[Worker] Erro no processamento do batch:", err);
   }
