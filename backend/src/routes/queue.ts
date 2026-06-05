@@ -13,11 +13,13 @@ queue.post("/join", async (c) => {
   if (!userId) {
     return c.json({ error: "userId is required" }, 400);
   }
+  const existingRank = await redis.zrank(QUEUE_KEY, userId);
 
-  // TODO: Implementar lógica de inserção na fila com Redis Sorted Set
-  // Usar redis.zadd(QUEUE_KEY, Date.now(), userId) para inserir o usuário
-  // ordenado pelo timestamp de chegada (score = timestamp).
-  // Retornar erro 409 se o userId já estiver na fila (ZRANK retornar não-null).
+  if (existingRank !== null) {
+    return c.json({ error: "User already in queue" }, 409);
+  }
+
+  await redis.zadd(QUEUE_KEY, Date.now(), userId);
 
   return c.json({ userId, message: "Joined queue (not yet implemented)" }, 201);
 });
